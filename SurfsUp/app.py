@@ -70,7 +70,7 @@ def precipitation():
     return jsonify(precip)      
 
 @app.route("/api/v1.0/stations")
-def precipitation():
+def stations():
     session = Session(engine)
     stations_list = session.query(Measurement.station).distinct().all()
     session.close()
@@ -82,36 +82,53 @@ def precipitation():
         stat.append(stat_dict)
     return jsonify(stat)
 
-@app.route("/api/v1.0/tabs")
-def precipitation():
+@app.route("/api/v1.0/tobs")
+def tobs():
     session = Session(engine)
-
-
-
+    start_date = '2016-08-23'
+    most_active_stations = session.query(Measurement.date, Measurement.tobs).filter((Measurement.station == 'USC00519281') & (Measurement.date > start_date)).all()
     session.close()
+
+    temp_obs = []
+    for date, tobs in most_active_stations:
+        temp_obs_dict = {}
+        temp_obs_dict['Date'] = date
+        temp_obs_dict['Temperature'] = tobs
+        temp_obs.append(temp_obs_dict)
+    return jsonify(temp_obs)
+
+
 @app.route("/api/v1.0/<start>")
-def precipitation():
+def temp_statistics(start_date):
     session = Session(engine)
-
-
-
+    min_max_avg = session.query(func.min(Measurement.tobs), func.max(Measurement.tobs), func.avg(Measurement.tobs)).filter(Measurement.date >= start_date).all()
     session.close()
+
+    temp_data = []
+    for tobs in min_max_avg:
+        temp_dict = {}
+        temp_dict['Minimum'] = min_max_avg[0][0]
+        temp_dict['Maximum'] = min_max_avg[0][1]
+        temp_dict['Average'] = min_max_avg[0][2]
+        temp_data.append(temp_dict)
+    return jsonify(temp_data)
+
+
+
 @app.route("/api/v1.0/<start>/<end>")
-def precipitation():
+def temp_start_end(start_date=None, end_date=None):
     session = Session(engine)
-
-
-
-
-
-
+    start_end_stats = session.query(func.min(Measurement.tobs), func.max(Measurement.tobs), func.avg(Measurement.tobs)).filter((Measurement.date >= start_date)&(Measurement.date <= end_date)).all()
     session.close()
 
-
-
-
-
-
+    temp_data = []
+    for tobs in start_end_stats:
+        temp_dict = {}
+        temp_dict['Minimum'] = start_end_stats[0][0]
+        temp_dict['Maximum'] = start_end_stats[0][1]
+        temp_dict['Average'] = start_end_stats[0][2]
+        temp_data.append(temp_dict)
+    return jsonify(temp_data)    
 
 
 
